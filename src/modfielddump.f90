@@ -51,7 +51,7 @@ contains
 !> Initializing fielddump. Read out the namelist, initializing the variables
   subroutine initfielddump
     use modmpi,   only :myid,my_real,comm3d,mpi_logical,mpi_integer,myidx,myidy
-    use modglobal,only :imax,jmax,kmax,cexpnr,ifnamopt,fname_options,dtmax,dtav_glob,kmax, ladaptive,dt_lim,btime,tres
+    use modglobal,only :imax,jmax,kmax,cexpnr,ifnamopt,fname_options,dtmax,dtav_glob,kmax, ladaptive,dt_lim,btime,tres,nsv
     use modstat_nc,only : lnetcdf,open_nc, define_nc,ncinfo,writestat_dims_nc
     implicit none
     integer :: ierr
@@ -59,7 +59,7 @@ contains
 
     namelist/NAMFIELDDUMP/ &
     dtav,lfielddump,ldiracc,lbinary,klow,khigh
-
+    write(*,*) "Start Initfielddump"
     dtav=dtav_glob
     klow=1
     khigh=kmax
@@ -99,7 +99,7 @@ contains
       call ncinfo(ncname( 4,:),'qt','Total water specific humidity','1e-5kg/kg','tttt')
       call ncinfo(ncname( 5,:),'ql','Liquid water specific humidity','1e-5kg/kg','tttt')
       call ncinfo(ncname( 6,:),'thl','Liquid water potential temperature above 300K','K','tttt')
-      call ncinfo(ncname( 7,:),'qr','Rain water specific humidity','1e-5kg/kg','tttt')
+      call ncinfo(ncname( 7,:),'sv','passive scalar','-','tttt')
       call ncinfo(ncname( 8,:),'buoy','Buoyancy','K','tttt')
       call open_nc(fname,  ncid,nrec,n1=imax,n2=jmax,n3=khigh-klow+1)
       if (nrec==0) then
@@ -108,7 +108,7 @@ contains
       end if
      call define_nc( ncid, NVar, ncname)
     end if
-
+  write(*,*) "Initfielddump done"
   end subroutine initfielddump
 
 !> Do fielddump. Collect data to truncated (2 byte) integers, and write them to file
@@ -116,13 +116,14 @@ contains
     use modfields, only : um,vm,wm,thlm,qtm,ql0,svm,thv0h,thvh
     use modsurfdata,only : thls,qts,thvs
     use modglobal, only : imax,i1,ih,jmax,j1,jh,k1,rk3step,&
-                          timee,dt_lim,cexpnr,ifoutput,rtimee
+                          timee,dt_lim,cexpnr,ifoutput,rtimee,nsv
     use modmpi,    only : myid,cmyidx, cmyidy
     use modstat_nc, only : lnetcdf, writestat_nc
     use modmicrodata, only : iqr, imicro, imicro_none
     implicit none
 
-    integer(KIND=selected_int_kind(4)), allocatable :: field(:,:,:),vars(:,:,:,:)
+    !cstep integer(KIND=selected_int_kind(4)), allocatable :: field(:,:,:),vars(:,:,:,:)
+    real  , allocatable ::  field(:,:,:),vars(:,:,:,:)
     integer i,j,k
     integer :: writecounter = 1
     integer :: reclength
@@ -144,7 +145,7 @@ contains
 
     reclength = imax*jmax*(khigh-klow+1)*2
 
-    field = NINT(1.0E3*um,2)
+    field = um
     if (lnetcdf) vars(:,:,:,1) = field(2:i1,2:j1,klow:khigh)
     if (lbinary) then
       if (ldiracc) then
@@ -157,7 +158,7 @@ contains
       close (ifoutput)
     endif
 
-    field = NINT(1.0E3*vm,2)
+    field = vm
     if (lnetcdf) vars(:,:,:,2) = field(2:i1,2:j1,klow:khigh)
     if (lbinary) then
       if (ldiracc) then
@@ -170,7 +171,7 @@ contains
       close (ifoutput)
     endif
 
-    field = NINT(1.0E3*wm,2)
+    field = wm
     if (lnetcdf) vars(:,:,:,3) = field(2:i1,2:j1,klow:khigh)
     if (lbinary) then
       if (ldiracc) then
@@ -183,7 +184,7 @@ contains
       close (ifoutput)
     endif
 
-    field = NINT(1.0E5*qtm,2)
+    field = qtm
     if (lnetcdf) vars(:,:,:,4) = field(2:i1,2:j1,klow:khigh)
     if (lbinary) then
       if (ldiracc) then
@@ -196,7 +197,7 @@ contains
       close (ifoutput)
     endif
 
-    field = NINT(1.0E5*ql0,2)
+    field = ql0
     if (lnetcdf) vars(:,:,:,5) = field(2:i1,2:j1,klow:khigh)
     if (lbinary) then
       if (ldiracc) then
@@ -209,7 +210,7 @@ contains
       close (ifoutput)
     endif
 
-    field = NINT(1.0E2*(thlm-300),2)
+    field = thlm
     if (lnetcdf) vars(:,:,:,6) = field(2:i1,2:j1,klow:khigh)
     if (lbinary) then
       if (ldiracc) then
@@ -222,11 +223,11 @@ contains
       close (ifoutput)
     end if
 
-    if(imicro/=imicro_none) then
+    if(nsv>0) then
       do i=2-ih,i1+ih
       do j=2-jh,j1+jh
       do k=1,k1
-        field(i,j,k) = NINT(1.0E5*svm(i,j,k,iqr),2)
+        field(i,j,k) = NINT(1.0E5*svm(i,j,k,1),2)
       enddo
       enddo
       enddo
@@ -250,7 +251,7 @@ contains
     do i=2-ih,i1+ih
     do j=2-jh,j1+jh
     do k=2,k1
-      field(i,j,k) = NINT(1.0E2*(thv0h(i,j,k)-thvh(k)),2)
+      field(i,j,k) = thv0h(i,j,k)-thvh(k)
     enddo
     enddo
     enddo

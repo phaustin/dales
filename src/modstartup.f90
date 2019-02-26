@@ -619,9 +619,27 @@ contains
       call slabsum(thl0av,1,k1,thl0,2-ih,i1+ih,2-jh,j1+jh,1,k1,2,i1,2,j1,1,k1)
       call slabsum(qt0av ,1,k1,qt0 ,2-ih,i1+ih,2-jh,j1+jh,1,k1,2,i1,2,j1,1,k1)
       call slabsum(ql0av ,1,k1,ql0 ,2-ih,i1+ih,2-jh,j1+jh,1,k1,2,i1,2,j1,1,k1)
-      do n=1,nsv
-        call slabsum(sv0av(1,n),1,k1,sv0(1,1,1,n),2-ih,i1+ih,2-jh,j1+jh,1,k1,2,i1,2,j1,1,k1)
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Set scalars to zero !!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      svprof = 0.
+      do k=1,kmax
+        do j=1,j2
+          do i=1,i2
+            do n=1,nsv
+              sv0(i,j,k,n) = svprof(k,n)
+              svm(i,j,k,n) = svprof(k,n)
+            end do
+          end do
+        end do
       end do
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !do n=1,nsv
+      !  call slabsum(sv0av(1,n),1,k1,sv0(1,1,1,n),2-ih,i1+ih,2-jh,j1+jh,1,k1,2,i1,2,j1,1,k1)
+      !end do
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       u0av  = u0av  /ijtot + cu
       v0av  = v0av  /ijtot + cv
@@ -802,16 +820,16 @@ contains
       endif
     close(ifinput)
 
-    if (nsv>0) then
-      name(5:5) = 's'
-      write(6,*) 'loading ',name
-      open(unit=ifinput,file=name,form='unformatted')
-      read(ifinput) ((((sv0(i,j,k,n),i=2-ih,i1+ih),j=2-jh,j1+jh),k=1,k1),n=1,nsv)
-      read(ifinput) (((svflux(i,j,n),i=1,i2),j=1,j2),n=1,nsv)
-      read(ifinput) (dsv(n),n=1,nsv)
-      read(ifinput)  timee
-      close(ifinput)
-    end if
+    !if (nsv>0) then
+      !name(5:5) = 's'
+      !write(6,*) 'loading ',name
+      !open(unit=ifinput,file=name,form='unformatted')
+      !read(ifinput) ((((sv0(i,j,k,n),i=2-ih,i1+ih),j=2-jh,j1+jh),k=1,k1),n=1,nsv)
+      !read(ifinput) (((svflux(i,j,n),i=1,i2),j=1,j2),n=1,nsv)
+      !read(ifinput) (dsv(n),n=1,nsv)
+      !read(ifinput)  timee
+      !close(ifinput)
+    !end if
 
     if (isurf == 1) then
       name(5:5) = 'l'
