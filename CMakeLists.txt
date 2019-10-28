@@ -12,7 +12,7 @@ set (CMAKE_Fortran_FLAGS_DEBUG   "-fbounds-check -fbacktrace -fno-f2c -O0 -g -ff
 
 ## Project parameters
 PROJECT(DALES Fortran)
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.1)
 set(VERSION_MAJOR "4")
 set(VERSION_MINOR "2")
 set(VERSION_PATCH "0")
@@ -55,6 +55,7 @@ if(NETCDF_FORTRAN_LIB)
 else(NETCDF_FORTRAN_LIB)
   MESSAGE(STATUS "WARNING: No Fortran NETCDF bindings are found.")
 endif(NETCDF_FORTRAN_LIB)
+message("found ${NETCDF_LIBS}, ${NETCDF_INCLUDE_DIR}")
 
 ### Documentation
 INCLUDE(FindDoxygen)
@@ -67,10 +68,11 @@ endif()
 ### Set case
 if(NOT CASE)
   set (CASE standard CACHE STRING
-      "Set the case."
+      "Set the case using e.g. -DCASE=CBLCOARSE"
       FORCE)
 endif()
-message("found ${NETCDF_LIBS}, ${NETCDF_INCLUDE_DIR}")
+message("setting CASE=${CASE}")
+
 ### Add case specific file 
 FILE(GLOB usrfile "${CMAKE_CURRENT_SOURCE_DIR}/cases/${CASE}/moduser.f90")
 if(usrfile STREQUAL "")
@@ -79,4 +81,13 @@ endif()
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different ${usrfile} ${CMAKE_CURRENT_SOURCE_DIR}/src/moduser.f90)
 MESSAGE(STATUS "Case " ${CASE} " uses " ${usrfile})
 
+set(dir "$ENV{HOME}")
+message("pha creating folder ${dir}/bin if it doen't exist")
+
+set(target_name "dales_${CASE}")
+
 ADD_SUBDIRECTORY(src)
+
+SET(CMAKE_INSTALL_PREFIX "${dir}")
+install(DIRECTORY DESTINATION "${dir}/bin")
+install(TARGETS ${target_name})
