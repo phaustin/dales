@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
+PROJECT(hello Fortran)
 set(target_name helloworld)
-set(CMAKE_Fortran_COMPILER mpif90)
-enable_language(Fortran)
 FILE(GLOB sourcefiles "*.f90")
 add_executable(${target_name} ${sourcefiles})
 set(dir "$ENV{HOME}")
